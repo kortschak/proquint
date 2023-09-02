@@ -2,6 +2,7 @@
 package main
 
 import (
+	"bufio"
 	"crypto/rand"
 	"flag"
 	"fmt"
@@ -30,8 +31,13 @@ func main() {
 		return
 	}
 
-	if isNumber(flag.Arg(0)) {
-		n, b := leadingZeros(flag.Arg(0))
+	arg, err := input(flag.Arg(0))
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(2)
+	}
+	if isNumber(arg) {
+		n, b := leadingZeros(arg)
 		var i big.Int
 		err := i.UnmarshalText(b)
 		if err != nil {
@@ -43,12 +49,23 @@ func main() {
 		return
 	}
 
-	n := decode(flag.Arg(0))
+	n := decode(arg)
 	if n == "" {
-		fmt.Fprintln(os.Stderr, "invalid proquint:", flag.Arg(0))
+		fmt.Fprintln(os.Stderr, "invalid proquint:", arg)
 		os.Exit(2)
 	}
 	fmt.Println(n)
+}
+
+func input(s string) (string, error) {
+	if s != "-" {
+		return s, nil
+	}
+	sc := bufio.NewScanner(os.Stdin)
+	if sc.Scan() {
+		return sc.Text(), nil
+	}
+	return s, sc.Err()
 }
 
 func leadingZeros(s string) (int, []byte) {
