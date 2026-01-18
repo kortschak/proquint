@@ -9,6 +9,7 @@ import (
 	"math/big"
 	"os"
 	"strings"
+	"unicode"
 
 	"upspin.io/key/proquint"
 )
@@ -69,17 +70,24 @@ func input(s string) (string, error) {
 }
 
 func leadingZeros(s string) (int, []byte) {
+	s, isHex := strings.CutPrefix(s, "0x")
+	var prefix string
+	if isHex {
+		prefix = "0x"
+	}
 	for i, r := range s {
 		if r != '0' {
-			return i, []byte(s[i:])
+			return i, []byte(prefix + s[i:])
 		}
 	}
 	return len(s), nil
 }
 
 func isNumber(s string) bool {
+	s, isHex := strings.CutPrefix(s, "0x")
 	for _, r := range s {
-		if r < '0' || '9' < r {
+		r = unicode.ToLower(r)
+		if (r < '0' || '9' < r) && (!isHex || (r < 'a' || 'f' < r)) {
 			return false
 		}
 	}
