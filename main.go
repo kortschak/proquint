@@ -40,10 +40,12 @@ func main() {
 	if isNumber(arg) {
 		n, b := leadingZeros(arg)
 		var i big.Int
-		err := i.UnmarshalText(b)
-		if err != nil {
-			fmt.Fprintln(os.Stderr, err)
-			os.Exit(2)
+		if b != nil {
+			err := i.UnmarshalText(b)
+			if err != nil {
+				fmt.Fprintln(os.Stderr, err)
+				os.Exit(2)
+			}
 		}
 
 		fmt.Println(encode(&i, n))
@@ -99,15 +101,18 @@ func proquintWords(i int) int {
 }
 
 func encode(i *big.Int, leadingZeros int) string {
-	words := make([]string, proquintWords(i.BitLen()))
-	mask := big.NewInt(0xffff)
-	var t big.Int
-	for w := range words {
-		words[w] = string(proquint.Encode(uint16(t.And(i, mask).Uint64())))
-		i.Rsh(i, 16)
-	}
-	for i, j := 0, len(words)-1; i < j; i, j = i+1, j-1 {
-		words[i], words[j] = words[j], words[i]
+	var words []string
+	if i.Cmp(&big.Int{}) != 0 {
+		words = make([]string, proquintWords(i.BitLen()))
+		mask := big.NewInt(0xffff)
+		var t big.Int
+		for w := range words {
+			words[w] = string(proquint.Encode(uint16(t.And(i, mask).Uint64())))
+			i.Rsh(i, 16)
+		}
+		for i, j := 0, len(words)-1; i < j; i, j = i+1, j-1 {
+			words[i], words[j] = words[j], words[i]
+		}
 	}
 	prefix := make([]string, leadingZeros)
 	for i := range prefix {
